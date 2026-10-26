@@ -1,0 +1,180 @@
+import "./styles.css";
+import { CONTENT, type BioSegment } from "./config";
+import { ColonyEngine } from "./engine";
+import { StatsView } from "./ui/stats";
+import {
+  initTheme,
+  readCanvasPalette,
+  toggleTheme,
+  type ThemeName,
+} from "./ui/theme";
+import { Typewriter } from "./ui/typewriter";
+
+function must<T extends Element>(selector: string): T {
+  const element = document.querySelector<T>(selector);
+  if (!element) throw new Error(`Missing element: ${selector}`);
+  return element;
+}
+
+function placeholderLink(link: HTMLAnchorElement) {
+  if (link.getAttribute("href") === "#") {
+    link.addEventListener("click", (event) => event.preventDefault());
+  }
+}
+
+function appendSegment(parent: HTMLElement, segment: BioSegment) {
+  if (typeof segment === "string") {
+    parent.append(document.createTextNode(segment));
+    return;
+  }
+  const link = document.createElement("a");
+  link.className = "ink-link";
+  link.href = segment.href;
+  link.textContent = segment.label;
+  if (/^https?:/i.test(segment.href)) {
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+  } else {
+    placeholderLink(link);
+  }
+  parent.append(link);
+}
+
+let theme: ThemeName = initTheme();
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+const MOTION_KEY = "colony-motion";
+
+function readMotionOverride() {
+  try {
+    return localStorage.getItem(MOTION_KEY) === "on";
+  } catch {
+    return false;
+  }
+}
+
+function storeMotionOverride(enabled: boolean) {
+  try {
+    localStorage.setItem(MOTION_KEY, enabled ? "on" : "off");
+  } catch {
+    // The toggle still works for this session if storage is unavailable.
+  }
+}
+
+const nav = must<HTMLElement>("#site-nav");
+for (const item of CONTENT.nav) {
+  const link = document.createElement("a");
+  link.href = item.href;
+  link.textContent = item.label;
+  if (item.active) link.setAttribute("aria-current", "page");
+  placeholderLink(link);
+  nav.append(link);
+}
+
+const themeButton = document.createElement("button");
+themeButton.type = "button";
+nav.append(themeButton);
+
+const motionButton = document.createElement("button");
+motionButton.type = "button";
+motionButton.className = "motion-toggle";
+motionButton.hidden = true;
+nav.append(motionButton);
+
+function paintThemeButton(name: ThemeName) {
+  const next = name === "light" ? "dark" : "light";
+  themeButton.textContent = next;
+  themeButton.setAttribute("aria-label", `Switch to ${next} theme`);
+  themeButton.title = `Switch to ${next} theme`;
+}
+paintThemeButton(theme);
+
+const taglineFull = must<HTMLElement>("#tagline-full");
+const taglineTyped = must<HTMLElement>("#tagline-typed");
+taglineFull.textContent = CONTENT.tagline;
+
+const intro = must<HTMLElement>("#intro");
+intro.textContent = CONTENT.intro;
+
+const bio = must<HTMLElement>("#bio");
+for (const line of CONTENT.bio) {
+  const paragraph = document.createElement("p");
+  for (const segment of line) appendSegment(paragraph, segment);
+  bio.append(paragraph);
+}
+
+const socials = must<HTMLElement>("#socials");
+CONTENT.socials.forEach((social, index) => {
+  if (index > 0) {
+    const separator = document.createElement("span");
+    separator.className = "separator";
+    separator.textContent = " / ";
+    socials.append(separator);
+  }
+  const link = document.createElement("a");
+  link.href = social.href;
+  link.textContent = social.label;
+  if (/^https?:/i.test(social.href)) {
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+  } else {
+    placeholderLink(link);
+  }
+  socials.append(link);
+});
+
+const stats = new StatsView(
+  must<HTMLButtonElement>("#stats-toggle"),
+  must<HTMLElement>("#stats-panel"),
+  must<HTMLElement>("#stat-ants"),
+  must<HTMLElement>("#stat-fps"),
+  must<HTMLElement>("#stat-pointer"),
+);
+
+const canvas = must<HTMLCanvasElement>("#colony");
+const engine = new ColonyEngine(canvas, readCanvasPalette(theme), (next) =>
+  stats.update(next),
+);
+
+if (readMotionOverride()) engine.setMotionEnabled(true);
+
+function syncMotionButton() {
+  motionButton.hidden = !reducedMotion.matches;
+  if (motionButton.hidden) return;
+  const enabled = engine.motionEnabled;
+  motionButton.textContent = enabled ? "still" : "animate";
+  motionButton.setAttribute("aria-pressed", String(enabled));
+  motionButton.setAttribute(
+    "aria-label",
+    enabled ? "Pause colony animation" : "Start colony animation",
+  );
+  motionButton.title = enabled
+    ? "Pause the colony and keep a still frame"
+    : "Start the colony (system reduced motion is on)";
+}
+
+syncMotionButton();
+reducedMotion.addEventListener("change", syncMotionButton);
+
+motionButton.addEventListener("click", () => {
+  const enabled = !engine.motionEnabled;
+  engine.setMotionEnabled(enabled);
+  storeMotionOverride(enabled);
+  syncMotionButton();
+});
+
+themeButton.addEventListener("click", () => {
+  theme = toggleTheme(theme);
+  paintThemeButton(theme);
+  engine.setPalette(readCanvasPalette(theme));
+});
+
+const typewriter = new Typewriter(taglineTyped, CONTENT.tagline);
+typewriter.start();
+
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    reducedMotion.removeEventListener("change", syncMotionButton);
+    engine.destroy();
+    typewriter.destroy();
+  });
+}

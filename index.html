@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#f4f2ed" />
+    <meta
+      name="description"
+      content="A small portfolio set inside a live ASCII ant colony."
+    />
+    <title>notariq</title>
+    <script>
+      (() => {
+        try {
+          const stored = localStorage.getItem("theme");
+          document.documentElement.dataset.theme = stored === "dark" ? "dark" : "light";
+        } catch {
+          document.documentElement.dataset.theme = "light";
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <canvas id="colony" class="colony-canvas" aria-hidden="true"></canvas>
+
+    <nav id="site-nav" class="site-nav" aria-label="Main" data-ants-avoid></nav>
+
+    <main class="pointer-events-none relative z-10 h-dvh">
+      <header class="hero" data-ants-avoid>
+        <p class="tagline">
+          <span id="tagline-full" class="sr-only"></span>
+          <span id="tagline-typed" aria-hidden="true"></span>
+          <span class="caret" aria-hidden="true"></span>
+        </p>
+        <h1 id="intro" class="intro"></h1>
+        <div id="bio" class="bio"></div>
+        <p id="socials" class="socials"></p>
+      </header>
+    </main>
+
+    <aside id="readout" class="readout" data-ants-avoid>
+      <button
+        id="stats-toggle"
+        class="stats-toggle"
+        type="button"
+        aria-pressed="true"
+        aria-controls="stats-panel"
+      >
+        stats
+      </button>
+      <div id="stats-panel" class="stats-panel">
+        <div><span id="stat-ants">ants 000</span></div>
+        <div><span id="stat-fps">fps 60</span></div>
+        <div><span id="stat-pointer">x 0000 / y 0000</span></div>
+      </div>
+    </aside>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
