@@ -130,14 +130,12 @@ body {
 
 .hero {
   position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: 9vh;
+  left: 6vw;
+  bottom: 8vh;
   z-index: 10;
-  width: min(30vw);
+  width: min(46rem, 62vw);
   color: var(--fg);
-  pointer-events: auto;;
-  text-align: left;
+  pointer-events: auto;
 }
 
 .tagline {
@@ -177,22 +175,6 @@ body {
   letter-spacing: -0.025em;
 }
 
-.bio {
-  max-width: 42rem;
-  margin-top: 1rem;
-  font-size: 15px;
-  line-height: 1.72;
-  color: color-mix(in srgb, var(--fg) 84%, transparent);
-}
-
-.bio p {
-  margin: 0;
-}
-
-.bio p + p {
-  margin-top: 0.3rem;
-}
-
 .ink-link,
 .socials a {
   color: inherit;
@@ -228,48 +210,6 @@ body {
 
 .socials .separator {
   opacity: 0.4;
-}
-
-.readout {
-  position: fixed;
-  right: 6vw;
-  top: 5.1rem;
-  z-index: 20;
-  color: var(--fg);
-  font-size: 10.5px;
-  line-height: 1.65;
-  letter-spacing: 0.035em;
-  text-align: right;
-  pointer-events: auto;
-}
-
-.stats-toggle {
-  padding: 0;
-  border: 0;
-  background: none;
-  color: inherit;
-  font: inherit;
-  font-size: 10px;
-  letter-spacing: 0.09em;
-  opacity: 0.3;
-  cursor: pointer;
-  outline: none;
-  transition: opacity 150ms ease;
-}
-
-.stats-toggle:hover,
-.stats-toggle:focus-visible {
-  opacity: 0.75;
-}
-
-.stats-panel {
-  margin-top: 0.35rem;
-  opacity: 0.32;
-  font-variant-numeric: tabular-nums;
-}
-
-.stats-panel[hidden] {
-  display: none;
 }
 
 @media (max-width: 900px) {

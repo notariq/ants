@@ -15,7 +15,7 @@ export interface NavItem {
 }
 
 export const CONTENT = {
-  tagline: "A thousand paths begin here. Hi, I'm",
+  tagline: "A thousand paths begin here. I'm",
   intro: "notariq",
   socials: [
     { label: "github", href: "#" },
@@ -25,8 +25,8 @@ export const CONTENT = {
   nav: [
     { label: "home", href: "#", active: true },
     { label: "projects", href: "#" },
-    { label: "gallery", href: "#" },
     { label: "blog", href: "#" },
+    { label: "about", href: "#" },
   ] satisfies NavItem[],
 };
 
@@ -76,8 +76,8 @@ export const TUNING = {
     maxSteps: 4,
   },
   pheromone: {
-    tickHz: 30,
-    evaporation: 0.075,
+    tickHz: 25,
+    evaporation: 0.15,
     diffusion: 0.08,
     seedAmount: 0.7,
     depositReturn: 11,
@@ -86,7 +86,7 @@ export const TUNING = {
     paintDeposit: 2.4,
     paintRadius: 0.25,
     paintSpacing: 5,
-    paintDecay: 0.14,
+    paintDecay: 0.2,
     paintHold: 4.5,
     maxPaint: 10,
   },

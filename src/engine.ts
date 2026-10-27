@@ -12,7 +12,6 @@ export interface SimStats {
 }
 
 const MEASURE_EVERY_FRAMES = 30;
-const STATS_INTERVAL = 0.2;
 
 export class ColonyEngine {
   private readonly world = new World();
@@ -27,8 +26,8 @@ export class ColonyEngine {
   private last = 0;
   private acc = 0;
   private frames = 0;
+
   private fps = 60;
-  private statsClock = 0;
   private intersecting = true;
   private visible = true;
   private disposed = false;
@@ -38,7 +37,6 @@ export class ColonyEngine {
   constructor(
     private readonly canvas: HTMLCanvasElement,
     palette: CanvasPalette,
-    private readonly onStats: (stats: SimStats) => void,
   ) {
     this.renderer = new ColonyRenderer(canvas, palette);
     this.resizeObserver = new ResizeObserver(() => this.resize());
@@ -174,23 +172,9 @@ export class ColonyEngine {
     if (++this.frames % MEASURE_EVERY_FRAMES === 0) this.measureContent();
 
     if (dt > 0) this.fps += (1 / dt - this.fps) * 0.06;
-    this.statsClock += dt;
-    if (this.statsClock >= STATS_INTERVAL) {
-      this.statsClock = 0;
-      this.reportStats();
-    }
 
     this.raf = requestAnimationFrame(this.frame);
   };
-
-  private reportStats() {
-    this.onStats({
-      ants: this.world.antCount,
-      fps: Math.round(this.fps),
-      x: Math.round(this.world.pointer.x),
-      y: Math.round(this.world.pointer.y),
-    });
-  }
 
   private drawStill() {
     this.fps = 0;
@@ -199,7 +183,6 @@ export class ColonyEngine {
     }
     this.measureContent();
     this.renderer.render(this.world);
-    this.reportStats();
   }
 
   private updateVisibility = () => {

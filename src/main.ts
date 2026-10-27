@@ -1,7 +1,6 @@
 import "./styles.css";
 import { CONTENT } from "./config";
 import { ColonyEngine } from "./engine";
-import { StatsView } from "./ui/stats";
 import {
   initTheme,
   readCanvasPalette,
@@ -97,18 +96,9 @@ CONTENT.socials.forEach((social, index) => {
   socials.append(link);
 });
 
-const stats = new StatsView(
-  must<HTMLButtonElement>("#stats-toggle"),
-  must<HTMLElement>("#stats-panel"),
-  must<HTMLElement>("#stat-ants"),
-  must<HTMLElement>("#stat-fps"),
-  must<HTMLElement>("#stat-pointer"),
-);
 
 const canvas = must<HTMLCanvasElement>("#colony");
-const engine = new ColonyEngine(canvas, readCanvasPalette(theme), (next) =>
-  stats.update(next),
-);
+const engine = new ColonyEngine(canvas, readCanvasPalette(theme));
 
 if (readMotionOverride()) engine.setMotionEnabled(true);
 
