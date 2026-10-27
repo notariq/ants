@@ -3,8 +3,6 @@ export interface InlineLink {
   href: string;
 }
 
-export type BioSegment = string | InlineLink;
-
 export interface SocialLink {
   label: string;
   href: string;
@@ -17,33 +15,12 @@ export interface NavItem {
 }
 
 export const CONTENT = {
-  tagline: "[MY TAGLINE]",
-  intro: "[MY INTRO LINE]",
-  bio: [
-    [
-      "i build ",
-      { label: "[THINGS I BUILD]", href: "#" },
-      " and write about ",
-      { label: "[THINGS I THINK ABOUT]", href: "#" },
-      ".",
-    ],
-    [
-      "currently ",
-      { label: "[WHERE I AM]", href: "#" },
-      ", working on ",
-      { label: "[WHAT I AM MAKING]", href: "#" },
-      ".",
-    ],
-    [
-      "previously ",
-      { label: "[SOMETHING ELSE]", href: "#" },
-      ".",
-    ],
-  ] satisfies BioSegment[][],
+  tagline: "A thousand paths begin here. Hi, I'm",
+  intro: "notariq",
   socials: [
     { label: "github", href: "#" },
+    { label: "twitter", href: "#" },
     { label: "linkedin", href: "#" },
-    { label: "x", href: "#" },
   ] satisfies SocialLink[],
   nav: [
     { label: "home", href: "#", active: true },
@@ -61,23 +38,35 @@ export const TUNING = {
     cellAspect: 1.45,
     maxDpr: 2,
     ambientDensity: 0.037,
-    cellTint: false,
     fontScale: 0.74,
   },
+  ant: {
+    count: 12,
+    minCount: 6,
+    maxCount: 12,
+    cellPx: 8,
+    tileGap: 1,
+    headings: 8,
+    glyphFlicker: 0.02,
+    trailsEnabled: true,
+    trailLife: 0.45,
+    strideLength: 9,
+    separationRadius: 150,
+    separationForce: 320,
+    collisionDistance: 112,
+  },
   world: {
-    minAnts: 100,
-    maxAnts: 240,
-    antArea: 12000,
-    nest: { x: 0.78, y: 0.64 },
+    nest: { x: 0.56, y: 0.52 },
     foods: [
       { x: 0.16, y: 0.24 },
       { x: 0.43, y: 0.15 },
       { x: 0.9, y: 0.38 },
+      { x: 0.3, y: 0.46 },
     ],
     forageSpeed: 24,
-    returnSpeed: 29,
-    foodRadius: 12,
-    nestRadius: 16,
+    returnSpeed: 33,
+    foodRadius: 60,
+    nestRadius: 110,
     edgeMargin: 22,
     avoidMargin: 30,
     avoidForce: 380,
@@ -90,7 +79,7 @@ export const TUNING = {
     tickHz: 30,
     evaporation: 0.075,
     diffusion: 0.08,
-    seedAmount: 1.15,
+    seedAmount: 0.7,
     depositReturn: 11,
     depositOut: 3.2,
     paintWeight: 1.6,

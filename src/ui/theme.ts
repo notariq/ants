@@ -4,13 +4,14 @@ export interface CanvasPalette {
   ant: string;
   pheromone: string;
   ambient: string;
-  shock: string;
-  tint: string;
+  antAbdomen: string;
+  antBody: string;
+  antLeg: string;
+  antAntenna: string;
+  antGlyph: string;
   antAlpha: number;
   pheromoneAlpha: readonly number[];
   ambientAlpha: number;
-  shockAlpha: number;
-  tintAlpha: number;
 }
 
 const ALPHAS: Record<
@@ -20,23 +21,17 @@ const ALPHAS: Record<
     | "antAlpha"
     | "pheromoneAlpha"
     | "ambientAlpha"
-    | "shockAlpha"
-    | "tintAlpha"
   >
 > = {
   light: {
     antAlpha: 0.92,
     pheromoneAlpha: [0.12, 0.17, 0.23, 0.3, 0.38],
     ambientAlpha: 0.075,
-    shockAlpha: 0.42,
-    tintAlpha: 0.055,
   },
   dark: {
     antAlpha: 0.9,
     pheromoneAlpha: [0.13, 0.19, 0.26, 0.34, 0.44],
     ambientAlpha: 0.09,
-    shockAlpha: 0.5,
-    tintAlpha: 0.075,
   },
 };
 
@@ -96,8 +91,11 @@ export function readCanvasPalette(name: ThemeName): CanvasPalette {
     ant: variable("--canvas-ant", "#121211"),
     pheromone: variable("--canvas-pheromone", "#5e5b54"),
     ambient: variable("--canvas-ambient", "#8b887f"),
-    shock: variable("--canvas-shock", "#2a2a28"),
-    tint: variable("--canvas-tint", "#34322d"),
+    antAbdomen: variable("--canvas-ant-abdomen", "#232320"),
+    antBody: variable("--canvas-ant-body", "#34342f"),
+    antLeg: variable("--canvas-ant-leg", "#7a776d"),
+    antAntenna: variable("--canvas-ant-antenna", "#9d998f"),
+    antGlyph: variable("--canvas-ant-glyph", "#e9e7df"),
     ...ALPHAS[name],
   };
 }

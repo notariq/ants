@@ -17,9 +17,3 @@ export interface PointerState {
   down: boolean;
   lastPaint: Vec2 | null;
 }
-
-export interface Shockwave {
-  x: number;
-  y: number;
-  born: number;
-}

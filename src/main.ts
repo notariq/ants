@@ -1,5 +1,5 @@
 import "./styles.css";
-import { CONTENT, type BioSegment } from "./config";
+import { CONTENT } from "./config";
 import { ColonyEngine } from "./engine";
 import { StatsView } from "./ui/stats";
 import {
@@ -20,24 +20,6 @@ function placeholderLink(link: HTMLAnchorElement) {
   if (link.getAttribute("href") === "#") {
     link.addEventListener("click", (event) => event.preventDefault());
   }
-}
-
-function appendSegment(parent: HTMLElement, segment: BioSegment) {
-  if (typeof segment === "string") {
-    parent.append(document.createTextNode(segment));
-    return;
-  }
-  const link = document.createElement("a");
-  link.className = "ink-link";
-  link.href = segment.href;
-  link.textContent = segment.label;
-  if (/^https?:/i.test(segment.href)) {
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-  } else {
-    placeholderLink(link);
-  }
-  parent.append(link);
 }
 
 let theme: ThemeName = initTheme();
@@ -88,19 +70,12 @@ function paintThemeButton(name: ThemeName) {
 }
 paintThemeButton(theme);
 
-const taglineFull = must<HTMLElement>("#tagline-full");
-const taglineTyped = must<HTMLElement>("#tagline-typed");
-taglineFull.textContent = CONTENT.tagline;
+const tagline = must<HTMLElement>("#tagline");
+tagline.textContent = CONTENT.tagline;
 
-const intro = must<HTMLElement>("#intro");
-intro.textContent = CONTENT.intro;
-
-const bio = must<HTMLElement>("#bio");
-for (const line of CONTENT.bio) {
-  const paragraph = document.createElement("p");
-  for (const segment of line) appendSegment(paragraph, segment);
-  bio.append(paragraph);
-}
+const introFull = must<HTMLElement>("#intro-full");
+const introTyped = must<HTMLElement>("#intro-typed");
+introFull.textContent = CONTENT.intro;
 
 const socials = must<HTMLElement>("#socials");
 CONTENT.socials.forEach((social, index) => {
@@ -168,7 +143,7 @@ themeButton.addEventListener("click", () => {
   engine.setPalette(readCanvasPalette(theme));
 });
 
-const typewriter = new Typewriter(taglineTyped, CONTENT.tagline);
+const typewriter = new Typewriter(introTyped, CONTENT.intro);
 typewriter.start();
 
 if (import.meta.hot) {

@@ -11,8 +11,11 @@
   --canvas-ant: #121211;
   --canvas-pheromone: #5e5b54;
   --canvas-ambient: #8b887f;
-  --canvas-shock: #2a2a28;
-  --canvas-tint: #34322d;
+  --canvas-ant-abdomen: #232320;
+  --canvas-ant-body: #34342f;
+  --canvas-ant-leg: #7a776d;
+  --canvas-ant-antenna: #9d998f;
+  --canvas-ant-glyph: #e9e7df;
   --mono: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas,
     "Liberation Mono", monospace;
 }
@@ -28,8 +31,11 @@
   --canvas-ant: #f0eee7;
   --canvas-pheromone: #96928a;
   --canvas-ambient: #66645e;
-  --canvas-shock: #d8d5cc;
-  --canvas-tint: #cfccc3;
+  --canvas-ant-abdomen: #f2f0e8;
+  --canvas-ant-body: #d8d5cc;
+  --canvas-ant-leg: #a8a49b;
+  --canvas-ant-antenna: #827e75;
+  --canvas-ant-glyph: #141412;
 }
 
 html,
@@ -124,12 +130,14 @@ body {
 
 .hero {
   position: absolute;
-  left: 8vw;
+  left: 50%;
+  transform: translateX(-50%);
   bottom: 9vh;
   z-index: 10;
-  width: min(46rem, 62vw);
+  width: min(30vw);
   color: var(--fg);
-  pointer-events: auto;
+  pointer-events: auto;;
+  text-align: left;
 }
 
 .tagline {
@@ -145,7 +153,6 @@ body {
   display: inline-block;
   width: 0.55em;
   height: 1em;
-  margin-left: 0.16em;
   transform: translateY(0.16em);
   background: var(--caret);
   animation: caret-blink 1.1s step-end infinite;
@@ -163,11 +170,11 @@ body {
 }
 
 .intro {
-  margin: 1.45rem 0 0;
-  font-size: clamp(1.15rem, 1.8vw, 1.45rem);
+  margin: 0;
+  font-size: clamp(1.6rem, 3vw, 2.5rem);
   font-weight: 500;
-  line-height: 1.35;
-  letter-spacing: -0.012em;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
 }
 
 .bio {
@@ -277,10 +284,11 @@ body {
   }
 
   .hero {
-    right: 6vw;
+    right: auto;
     bottom: 6vh;
-    left: 6vw;
-    width: auto;
+    left: 50%;
+    width: 88vw;
+    transform: translateX(-50%);
   }
 
   .readout {

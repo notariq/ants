@@ -1,4 +1,4 @@
-import { angleDiff, clamp } from "./math";
+import { angleDiff, clamp, rand } from "./math";
 import type { PheromoneField } from "./pheromone";
 import type { Vec2 } from "./types";
 
@@ -18,8 +18,13 @@ export interface Ant {
   swarmTarget: 0 | 1;
   pause: number;
   age: number;
-  phase: number;
+  /** Distance travelled, drives the walk cycle so stopped ants freeze. */
+  stride: number;
   wander: number;
+  wanderFreq: number;
+  wanderAmp: number;
+  goalJitterX: number;
+  goalJitterY: number;
   speedScale: number;
 }
 
@@ -45,8 +50,12 @@ export function createAnt(
     swarmTarget: 0,
     pause: 0,
     age: 0,
-    phase: Math.random() * 8,
+    stride: Math.random() * 8,
     wander: Math.random() * Math.PI * 2,
+    wanderFreq: rand(0.7, 1.7),
+    wanderAmp: rand(0.22, 0.48),
+    goalJitterX: 0,
+    goalJitterY: 0,
     speedScale: 0.86 + Math.random() * 0.28,
   };
 }
@@ -72,12 +81,17 @@ export function aimAtTarget(
 
   field.gradient(ant.x, ant.y, grad);
   const along = grad.x * tx + grad.y * ty;
+  const nearGoal = clamp((dist - 48) / 120, 0, 1);
   const follow =
     along > -0.12
-      ? (ant.state === "out" ? 1 : 0.68) * (0.58 + 0.42 * clamp(along, 0, 1))
+      ? (ant.state === "out" ? 0.5 : 0.3) *
+        (0.45 + 0.55 * clamp(along, 0, 1)) *
+        nearGoal
       : 0;
 
-  const wobble = Math.sin(time * 1.35 + ant.wander) * 0.22;
+  const wobble =
+    Math.sin(time * ant.wanderFreq + ant.wander) * ant.wanderAmp +
+    Math.sin(time * 0.47 + ant.wander * 1.7) * ant.wanderAmp * 0.35;
   out.x = tx + grad.x * follow - ty * wobble;
   out.y = ty + grad.y * follow + tx * wobble;
   const len = Math.hypot(out.x, out.y) || 1;
@@ -92,5 +106,5 @@ export function orientAnt(ant: Ant, dt: number) {
     const desired = Math.atan2(ant.vy, ant.vx);
     ant.heading += angleDiff(ant.heading, desired) * Math.min(1, dt * 13);
   }
-  ant.phase += dt * (speed > 3 ? 5 + speed * 0.16 : 0.7);
+  if (speed > 0.05) ant.stride = (ant.stride + speed * dt) % 4096;
 }
