@@ -33,6 +33,7 @@ export class ColonyEngine {
   private disposed = false;
   private dragPointer: number | null = null;
   private motionOverride = false;
+  private suspended = false;
 
   constructor(
     private readonly canvas: HTMLCanvasElement,
@@ -65,6 +66,24 @@ export class ColonyEngine {
   setPalette(palette: CanvasPalette) {
     this.renderer.setPalette(palette);
     if (this.isStatic()) this.drawStill();
+  }
+
+  refresh() {
+    if (this.isStatic()) {
+      this.drawStill();
+      return;
+    }
+    this.measureContent();
+  }
+
+  setActive(active: boolean) {
+    this.suspended = !active;
+    if (this.suspended) {
+      cancelAnimationFrame(this.raf);
+      return;
+    }
+    this.refresh();
+    this.schedule();
   }
 
   get motionEnabled() {
@@ -145,7 +164,7 @@ export class ColonyEngine {
 
   private schedule() {
     cancelAnimationFrame(this.raf);
-    if (this.disposed || !this.visible || this.isStatic()) {
+    if (this.disposed || this.suspended || !this.visible || this.isStatic()) {
       return;
     }
     this.last = performance.now();

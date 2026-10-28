@@ -1,6 +1,9 @@
 import "./styles.css";
 import { CONTENT } from "./config";
 import { ColonyEngine } from "./engine";
+import { aboutPage } from "./pages/about";
+import { antPage } from "./pages/ant";
+import { createRouter } from "./router";
 import {
   initTheme,
   readCanvasPalette,
@@ -42,13 +45,14 @@ function storeMotionOverride(enabled: boolean) {
 }
 
 const nav = must<HTMLElement>("#site-nav");
+const navLinks: HTMLAnchorElement[] = [];
 for (const item of CONTENT.nav) {
   const link = document.createElement("a");
   link.href = item.href;
   link.textContent = item.label;
-  if (item.active) link.setAttribute("aria-current", "page");
   placeholderLink(link);
   nav.append(link);
+  navLinks.push(link);
 }
 
 const themeButton = document.createElement("button");
@@ -74,14 +78,14 @@ tagline.textContent = CONTENT.tagline;
 
 const introFull = must<HTMLElement>("#intro-full");
 const introTyped = must<HTMLElement>("#intro-typed");
-introFull.textContent = CONTENT.intro;
+introFull.textContent = `${CONTENT.intro.name} (${CONTENT.intro.alias})`;
 
 const socials = must<HTMLElement>("#socials");
 CONTENT.socials.forEach((social, index) => {
   if (index > 0) {
     const separator = document.createElement("span");
     separator.className = "separator";
-    separator.textContent = " / ";
+    separator.textContent = " ";
     socials.append(separator);
   }
   const link = document.createElement("a");
@@ -133,12 +137,47 @@ themeButton.addEventListener("click", () => {
   engine.setPalette(readCanvasPalette(theme));
 });
 
-const typewriter = new Typewriter(introTyped, CONTENT.intro);
-typewriter.start();
+const typewriter = new Typewriter(introTyped);
+let typewriterStarted = false;
+
+function startTypewriter() {
+  if (typewriterStarted) return;
+  typewriterStarted = true;
+  typewriter.play([CONTENT.intro.name, CONTENT.intro.alias]);
+}
+
+function syncNav(path: string) {
+  const currentHref = path === "/" ? "#/" : `#${path}`;
+  for (const link of navLinks) {
+    if (link.getAttribute("href") === currentHref) {
+      link.setAttribute("aria-current", "page");
+    } else {
+      link.removeAttribute("aria-current");
+    }
+  }
+}
+
+const pageRoot = must<HTMLElement>("#page-root");
+
+const router = createRouter({
+  pages: [aboutPage, antPage],
+  home: must<HTMLElement>("#view-home"),
+  outlet: pageRoot,
+  onChange(path) {
+    const home = path === "/";
+    const colony = home || path === "/ant";
+    canvas.hidden = !colony;
+    engine.setActive(colony);
+    pageRoot.classList.toggle("is-canvas-route", path === "/ant");
+    syncNav(path);
+    if (home) startTypewriter();
+  },
+});
 
 if (import.meta.hot) {
   import.meta.hot.dispose(() => {
     reducedMotion.removeEventListener("change", syncMotionButton);
+    router.destroy();
     engine.destroy();
     typewriter.destroy();
   });

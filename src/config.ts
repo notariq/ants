@@ -11,22 +11,24 @@ export interface SocialLink {
 export interface NavItem {
   label: string;
   href: string;
-  active?: boolean;
 }
 
 export const CONTENT = {
   tagline: "A thousand paths begin here. I'm",
-  intro: "notariq",
+  intro: {
+    alias: "notariq",
+    name: "Hauzan Ariq Bakri",
+  },
   socials: [
     { label: "github", href: "#" },
     { label: "twitter", href: "#" },
     { label: "linkedin", href: "#" },
   ] satisfies SocialLink[],
   nav: [
-    { label: "home", href: "#", active: true },
+    { label: "home", href: "#/" },
+    { label: "ant", href: "#/ant" },
     { label: "projects", href: "#" },
-    { label: "blog", href: "#" },
-    { label: "about", href: "#" },
+    { label: "about", href: "#/about" },
   ] satisfies NavItem[],
 };
 
@@ -42,8 +44,8 @@ export const TUNING = {
   },
   ant: {
     count: 12,
-    minCount: 6,
-    maxCount: 12,
+    minCount: 0,
+    maxCount: 32,
     cellPx: 8,
     tileGap: 1,
     headings: 8,

@@ -3,7 +3,6 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <meta name="theme-color" content="#f4f2ed" />
     <meta
       name="description"
@@ -27,15 +26,19 @@
     <nav id="site-nav" class="site-nav" aria-label="Main" data-ants-avoid></nav>
 
     <main class="pointer-events-none relative z-10 h-dvh">
-      <header class="hero" data-ants-avoid>
-        <p id="tagline" class="tagline"></p>
-        <h1 id="intro" class="intro">
-          <span id="intro-full" class="sr-only"></span>
-          <span id="intro-typed" aria-hidden="true"></span>
-          <span class="caret" aria-hidden="true"></span>
-        </h1>  
-        <p id="socials" class="socials"></p>
-      </header>
+      <div id="view-home">
+        <header class="hero" data-ants-avoid>
+          <p id="tagline" class="tagline"></p>
+          <h1 id="intro" class="intro">
+            <span id="intro-full" class="sr-only"></span>
+            <span id="intro-typed" aria-hidden="true"></span>
+            <span class="caret" aria-hidden="true"></span>
+          </h1>  
+          <p id="socials" class="socials"></p>
+        </header>
+      </div>
+
+      <div id="page-root" class="page-root" hidden></div>
     </main>
 
     <script type="module" src="/src/main.ts"></script>
