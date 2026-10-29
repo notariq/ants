@@ -119,12 +119,7 @@ export class ColonyEngine {
       TUNING.render.maxDpr,
     );
     this.renderer.resize(rect.width, rect.height, dpr);
-    this.world.resize(
-      rect.width,
-      rect.height,
-      this.renderer.grid.cellW,
-      this.renderer.grid.cellH,
-    );
+    this.world.resize(rect.width, rect.height);
     this.measureContent();
     if (this.isStatic()) this.drawStill();
   };
@@ -245,7 +240,6 @@ export class ColonyEngine {
       const x = clamp(point.x, 0, point.width);
       const y = clamp(point.y, 0, point.height);
       this.world.setPointer(x, y, true);
-      if (point.inside) this.world.paintTo(point.x, point.y);
       return;
     }
 

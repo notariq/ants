@@ -2,7 +2,6 @@ export type ThemeName = "light" | "dark";
 
 export interface CanvasPalette {
   ant: string;
-  pheromone: string;
   ambient: string;
   antAbdomen: string;
   antBody: string;
@@ -10,27 +9,19 @@ export interface CanvasPalette {
   antAntenna: string;
   antGlyph: string;
   antAlpha: number;
-  pheromoneAlpha: readonly number[];
   ambientAlpha: number;
 }
 
 const ALPHAS: Record<
   ThemeName,
-  Pick<
-    CanvasPalette,
-    | "antAlpha"
-    | "pheromoneAlpha"
-    | "ambientAlpha"
-  >
+  Pick<CanvasPalette, "antAlpha" | "ambientAlpha">
 > = {
   light: {
     antAlpha: 0.92,
-    pheromoneAlpha: [0.12, 0.17, 0.23, 0.3, 0.38],
     ambientAlpha: 0.075,
   },
   dark: {
     antAlpha: 0.9,
-    pheromoneAlpha: [0.13, 0.19, 0.26, 0.34, 0.44],
     ambientAlpha: 0.09,
   },
 };
@@ -44,7 +35,7 @@ export function getInitialTheme(): ThemeName {
   try {
     return localStorage.getItem(STORAGE_KEY) === "dark" ? "dark" : "light";
   } catch {
-    return "light";
+    return "dark";
   }
 }
 
@@ -89,7 +80,6 @@ export function readCanvasPalette(name: ThemeName): CanvasPalette {
 
   return {
     ant: variable("--canvas-ant", "#121211"),
-    pheromone: variable("--canvas-pheromone", "#5e5b54"),
     ambient: variable("--canvas-ambient", "#8b887f"),
     antAbdomen: variable("--canvas-ant-abdomen", "#232320"),
     antBody: variable("--canvas-ant-body", "#34342f"),

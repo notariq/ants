@@ -2,7 +2,7 @@ import "./styles.css";
 import { CONTENT } from "./config";
 import { ColonyEngine } from "./engine";
 import { aboutPage } from "./pages/about";
-import { antPage } from "./pages/ant";
+import { antPage } from "./pages/ants";
 import { createRouter } from "./router";
 import {
   initTheme,

@@ -5,7 +5,7 @@ import type { Box } from "../sim/types";
 import type { World } from "../sim/world";
 import type { CanvasPalette } from "../ui/theme";
 import { CellGrid } from "./grid";
-import { AMBIENT_RAMP, PHEROMONE_RAMP } from "./glyphs";
+import { AMBIENT_RAMP } from "./glyphs";
 import {
   buildSprites,
   BODY_GLYPHS,
@@ -34,8 +34,6 @@ export class ColonyRenderer {
   private sprites: SpriteSet | null = null;
   private spriteKey = "";
   private readonly trails = new Map<number, TrailGhost[]>();
-  private readonly pheromoneBuckets: number[][] = [[], [], [], [], []];
-  private readonly paintCells: number[] = [];
 
   constructor(canvas: HTMLCanvasElement, palette: CanvasPalette) {
     this.grid = new CellGrid(canvas);
@@ -135,7 +133,6 @@ export class ColonyRenderer {
     ctx.textBaseline = "middle";
 
     this.drawAmbient();
-    this.drawPheromone(world);
     this.drawAnts(world);
     ctx.globalAlpha = 1;
   }
@@ -173,61 +170,6 @@ export class ColonyRenderer {
         c * cellW + cellW * 0.5,
         r * cellH + cellH * 0.5 + 1,
       );
-    }
-    ctx.globalAlpha = 1;
-  }
-
-  private drawPheromone(world: World) {
-    const { ctx, cols, cellW, cellH } = this.grid;
-    const trail = world.field.trail;
-    const paint = world.field.paint;
-    if (trail.length !== this.dim.length) return;
-
-    for (const bucket of this.pheromoneBuckets) bucket.length = 0;
-    this.paintCells.length = 0;
-    for (let i = 0; i < trail.length; i++) {
-      const painted = paint[i];
-      if (painted > 0.02) this.paintCells.push(i);
-      const value = trail[i] + painted * TUNING.pheromone.paintWeight;
-      if (value < 0.02) continue;
-      const shown = Math.min(1, value * 0.78) * this.dim[i];
-      if (shown < 0.04) continue;
-      const level = Math.min(4, Math.floor(shown * 5));
-      this.pheromoneBuckets[level].push(i);
-    }
-
-    ctx.fillStyle = this.palette.pheromone;
-    for (let level = 0; level < this.pheromoneBuckets.length; level++) {
-      const bucket = this.pheromoneBuckets[level];
-      if (bucket.length === 0) continue;
-      ctx.globalAlpha = this.palette.pheromoneAlpha[level];
-      const glyph = PHEROMONE_RAMP[level];
-      for (const i of bucket) {
-        const c = i % cols;
-        const r = (i / cols) | 0;
-        ctx.fillText(
-          glyph,
-          c * cellW + cellW * 0.5,
-          r * cellH + cellH * 0.5 + 1,
-        );
-      }
-    }
-
-    if (this.paintCells.length > 0) {
-      ctx.fillStyle = this.palette.ant;
-      for (const i of this.paintCells) {
-        const dim = this.dim[i];
-        if (dim < 0.06) continue;
-        const c = i % cols;
-        const r = (i / cols) | 0;
-        ctx.globalAlpha =
-          Math.min(0.82, 0.24 + paint[i] * 0.1) * dim;
-        ctx.fillText(
-          (c * 7 + r * 13) % 7 === 0 ? "@" : "#",
-          c * cellW + cellW * 0.5,
-          r * cellH + cellH * 0.5 + 1,
-        );
-      }
     }
     ctx.globalAlpha = 1;
   }
