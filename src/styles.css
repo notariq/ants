@@ -161,6 +161,16 @@ body {
   min-height: 100dvh;
 }
 
+.projects {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.projects-title {
+  color: var(--muted);
+}
+
 .about {
   display: flex;
   align-items: center;
