@@ -9,7 +9,6 @@
   --caret: #181817;
   --selection: rgb(24 24 23 / 0.12);
   --canvas-ant: #121211;
-  --canvas-pheromone: #5e5b54;
   --canvas-ambient: #8b887f;
   --canvas-ant-abdomen: #232320;
   --canvas-ant-body: #34342f;
@@ -29,7 +28,6 @@
   --caret: #ecebe5;
   --selection: rgb(236 235 229 / 0.16);
   --canvas-ant: #f0eee7;
-  --canvas-pheromone: #96928a;
   --canvas-ambient: #66645e;
   --canvas-ant-abdomen: #f2f0e8;
   --canvas-ant-body: #d8d5cc;
@@ -126,10 +124,6 @@ body {
 
 .site-nav button[hidden] {
   display: none;
-}
-
-.site-nav .motion-toggle:not([hidden]) {
-  opacity: 0.78;
 }
 
 .hero {
@@ -302,10 +296,6 @@ body {
     font-size: 12px;
   }
 
-  .site-nav .motion-toggle:not([hidden]) {
-    opacity: 0.9;
-  }
-
   .hero {
     right: auto;
     bottom: 6vh;
@@ -381,10 +371,6 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .caret {
-    animation: none;
-  }
-
   body {
     transition: none;
   }

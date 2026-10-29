@@ -1,12 +1,10 @@
 import { TUNING } from "../config";
-import { aimAtTarget, createAnt, orientAnt, type Ant } from "./ants";
+import { createAnt, orientAnt, wanderDirection, type Ant } from "./ants";
 import { clamp, rand, TAU } from "./math";
-import { PheromoneField } from "./pheromone";
 import { swarmAcceleration } from "./swarm";
 import type { Box, PointerState, Vec2 } from "./types";
 
 type WorldTuning = typeof TUNING.world;
-type PheromoneTuning = typeof TUNING.pheromone;
 type PointerTuning = typeof TUNING.pointer;
 type SwarmTuning = typeof TUNING.swarm;
 type AntTuning = typeof TUNING.ant;
@@ -18,24 +16,17 @@ export class World {
   height = 0;
   time = 0;
   ants: Ant[] = [];
-  readonly field = new PheromoneField(TUNING.pheromone);
   readonly pointer: PointerState = {
     x: 0,
     y: 0,
     active: false,
     down: false,
-    lastPaint: null,
   };
 
-  private nest: Vec2 = { x: 0, y: 0 };
-  private foods: Vec2[] = [];
-  private paths: Vec2[][] = [];
   private boxes: Box[] = [];
   private nextId = 1;
 
-  private readonly grad: Vec2 = { x: 0, y: 0 };
   private readonly aim: Vec2 = { x: 0, y: 0 };
-  private readonly goal: Vec2 = { x: 0, y: 0 };
   private readonly swarmAcc: Vec2 = { x: 0, y: 0 };
   private readonly push: Vec2 = { x: 0, y: 0 };
   private readonly separation: Vec2 = { x: 0, y: 0 };
@@ -43,7 +34,6 @@ export class World {
 
   constructor(
     private readonly worldTuning: WorldTuning = TUNING.world,
-    private readonly pheromoneTuning: PheromoneTuning = TUNING.pheromone,
     private readonly pointerTuning: PointerTuning = TUNING.pointer,
     private readonly swarmTuning: SwarmTuning = TUNING.swarm,
     private readonly antTuning: AntTuning = TUNING.ant,
@@ -53,28 +43,10 @@ export class World {
     return this.ants.length;
   }
 
-  resize(width: number, height: number, cellW: number, cellH: number) {
+  resize(width: number, height: number) {
     if (width < 1 || height < 1) return;
     this.width = width;
     this.height = height;
-
-    const cols = Math.ceil(width / cellW);
-    const rows = Math.ceil(height / cellH);
-    this.field.resize(cols, rows, cellW, cellH);
-
-    this.nest = {
-      x: width * this.worldTuning.nest.x,
-      y: height * this.worldTuning.nest.y,
-    };
-    this.foods = this.worldTuning.foods.map((food) => ({
-      x: width * food.x,
-      y: height * food.y,
-    }));
-
-    this.paths = this.foods.map((food, i) => this.makePath(this.nest, food, i));
-    for (const path of this.paths) {
-      this.field.seedPath(path, this.pheromoneTuning.seedAmount);
-    }
 
     const target = clamp(
       Math.round(
@@ -108,23 +80,12 @@ export class World {
 
     for (const ant of this.ants) this.stepAnt(ant, dt);
     this.resolveCollisions();
-
-    if (this.pointer.down && this.pointer.active) {
-      this.field.depositPaint(
-        this.pointer.x,
-        this.pointer.y,
-        this.pheromoneTuning.paintHold * dt,
-        this.pheromoneTuning.paintRadius * 2,
-      );
-    }
-    this.field.update(dt);
   }
 
   setPointer(x: number, y: number, active: boolean) {
     this.pointer.x = x;
     this.pointer.y = y;
     this.pointer.active = active;
-    if (!active) this.pointer.lastPaint = null;
   }
 
   pointerDown(x: number, y: number) {
@@ -132,53 +93,11 @@ export class World {
     this.pointer.y = y;
     this.pointer.active = true;
     this.pointer.down = true;
-    this.pointer.lastPaint = { x, y };
-    this.field.depositPaint(
-      x,
-      y,
-      this.pheromoneTuning.paintDeposit * 0.5,
-      this.pheromoneTuning.paintRadius,
-    );
     this.scatter(x, y);
-  }
-
-  paintTo(x: number, y: number) {
-    const clampedX = clamp(x, 0, this.width);
-    const clampedY = clamp(y, 0, this.height);
-    const last = this.pointer.lastPaint;
-    if (!last) {
-      this.pointer.lastPaint = { x: clampedX, y: clampedY };
-      this.field.depositPaint(
-        clampedX,
-        clampedY,
-        this.pheromoneTuning.paintDeposit,
-        this.pheromoneTuning.paintRadius,
-      );
-      return;
-    }
-
-    const dx = clampedX - last.x;
-    const dy = clampedY - last.y;
-    const length = Math.hypot(dx, dy);
-    const samples = Math.max(
-      1,
-      Math.ceil(length / this.pheromoneTuning.paintSpacing),
-    );
-    for (let i = 1; i <= samples; i++) {
-      const t = i / samples;
-      this.field.depositPaint(
-        last.x + dx * t,
-        last.y + dy * t,
-        this.pheromoneTuning.paintDeposit,
-        this.pheromoneTuning.paintRadius,
-      );
-    }
-    this.pointer.lastPaint = { x: clampedX, y: clampedY };
   }
 
   pointerUp() {
     this.pointer.down = false;
-    this.pointer.lastPaint = null;
     for (const ant of this.ants) ant.swarmTarget = 0;
   }
 
@@ -211,22 +130,10 @@ export class World {
       ant.pause = 0.35 + Math.random() * 0.9;
     }
 
-    const base = ant.state === "out" ? this.foods[ant.food] : this.nest;
-    this.goal.x = base.x + ant.goalJitterX;
-    this.goal.y = base.y + ant.goalJitterY;
-    aimAtTarget(
-      ant,
-      this.goal,
-      this.field,
-      this.time,
-      this.grad,
-      this.aim,
-    );
+    wanderDirection(ant, this.time, this.antTuning, this.aim);
 
     let desiredSpeed =
-      (ant.state === "out"
-        ? this.worldTuning.forageSpeed
-        : this.worldTuning.returnSpeed) * ant.speedScale;
+      this.worldTuning.wanderSpeed * ant.speedScale;
     if (ant.pause > 0) desiredSpeed *= 0.16;
 
     let ax = (this.aim.x * desiredSpeed - ant.vx) * 5.4;
@@ -237,7 +144,6 @@ export class World {
       swarmAcceleration(
         ant,
         this.ants,
-        this.field,
         this.pointer,
         this.swarmTuning,
         this.swarmAcc,
@@ -266,22 +172,27 @@ export class World {
     ax += this.separation.x;
     ay += this.separation.y;
 
-    const margin = this.worldTuning.edgeMargin;
-    if (ant.x < margin) ax += ((margin - ant.x) / margin) * EDGE_FORCE;
-    else if (ant.x > this.width - margin) {
-      ax -= ((ant.x - (this.width - margin)) / margin) * EDGE_FORCE;
-    }
-    if (ant.y < margin) ay += ((margin - ant.y) / margin) * EDGE_FORCE;
-    else if (ant.y > this.height - margin) {
-      ay -= ((ant.y - (this.height - margin)) / margin) * EDGE_FORCE;
+    if (ant.swarm > 0.05) {
+      const margin = this.worldTuning.edgeMargin;
+      const edgeScale = ant.swarm;
+      if (ant.x < margin) {
+        ax += ((margin - ant.x) / margin) * EDGE_FORCE * edgeScale;
+      } else if (ant.x > this.width - margin) {
+        ax -= ((ant.x - (this.width - margin)) / margin) * EDGE_FORCE * edgeScale;
+      }
+      if (ant.y < margin) {
+        ay += ((margin - ant.y) / margin) * EDGE_FORCE * edgeScale;
+      } else if (ant.y > this.height - margin) {
+        ay -= ((ant.y - (this.height - margin)) / margin) * EDGE_FORCE * edgeScale;
+      }
     }
 
     ant.vx += ax * dt;
     ant.vy += ay * dt;
 
-    const forageMax = desiredSpeed * 1.7;
+    const wanderMax = desiredSpeed * 1.7;
     const maxSpeed =
-      forageMax + (this.swarmTuning.maxSpeed - forageMax) * ant.swarm;
+      wanderMax + (this.swarmTuning.maxSpeed - wanderMax) * ant.swarm;
     const speed = Math.hypot(ant.vx, ant.vy);
     if (speed > maxSpeed) {
       const scale = maxSpeed / speed;
@@ -291,53 +202,67 @@ export class World {
 
     ant.x += ant.vx * dt;
     ant.y += ant.vy * dt;
-    ant.x = clamp(ant.x, 0, this.width);
-    ant.y = clamp(ant.y, 0, this.height);
+
+    const exit = this.worldTuning.exitMargin;
+    if (
+      ant.x < -exit ||
+      ant.x > this.width + exit ||
+      ant.y < -exit ||
+      ant.y > this.height + exit
+    ) {
+      this.reenterAnt(ant);
+    }
+
     orientAnt(ant, dt);
-
-    const depositRate =
-      ant.state === "back"
-        ? this.pheromoneTuning.depositReturn
-        : this.pheromoneTuning.depositOut;
-    this.field.deposit(
-      ant.x,
-      ant.y,
-      depositRate * dt * (0.35 + 0.65 * (1 - ant.swarm)),
-      0,
-    );
-
-    if (ant.pause <= 0 && ant.swarm < 0.18) this.arrive(ant);
   }
 
-  private arrive(ant: Ant) {
-    if (ant.state === "out") {
-      const food = this.foods[ant.food];
-      if (
-        (ant.x - food.x) ** 2 + (ant.y - food.y) ** 2 <
-        this.worldTuning.foodRadius ** 2
-      ) {
-        ant.state = "back";
-        ant.pause = 0.15 + Math.random() * 0.35;
-        ant.heading += Math.PI;
-        ant.vx *= -0.35;
-        ant.vy *= -0.35;
-        this.rerollGoal(ant);
-      }
-      return;
+  /**
+   * Send an ant that wandered off-screen back in from a random edge so the
+   * colony keeps flowing through the view instead of piling up at the border.
+   */
+  private reenterAnt(ant: Ant) {
+    const inset = this.worldTuning.entryInset;
+    const edge = Math.floor(Math.random() * 4);
+    let x = 0;
+    let y = 0;
+    let heading = 0;
+
+    switch (edge) {
+      case 0:
+        x = rand(0, this.width);
+        y = -inset;
+        heading = Math.PI / 2;
+        break;
+      case 1:
+        x = this.width + inset;
+        y = rand(0, this.height);
+        heading = Math.PI;
+        break;
+      case 2:
+        x = rand(0, this.width);
+        y = this.height + inset;
+        heading = -Math.PI / 2;
+        break;
+      default:
+        x = -inset;
+        y = rand(0, this.height);
+        heading = 0;
+        break;
     }
 
-    if (
-      (ant.x - this.nest.x) ** 2 + (ant.y - this.nest.y) ** 2 <
-      this.worldTuning.nestRadius ** 2
-    ) {
-      ant.state = "out";
-      ant.food = Math.floor(Math.random() * this.foods.length);
-      ant.pause = 0.15 + Math.random() * 0.35;
-      ant.heading += Math.PI;
-      ant.vx *= -0.35;
-      ant.vy *= -0.35;
-      this.rerollGoal(ant);
-    }
+    heading += rand(-0.4, 0.4);
+    const speed = this.worldTuning.wanderSpeed * ant.speedScale;
+    ant.x = x;
+    ant.y = y;
+    ant.vx = Math.cos(heading) * speed;
+    ant.vy = Math.sin(heading) * speed;
+    ant.heading = heading;
+    ant.wanderAngle = heading;
+    ant.wanderTimer =
+      this.time + rand(this.antTuning.wanderMin, this.antTuning.wanderMax);
+    ant.pause = 0;
+    ant.swarm = 0;
+    ant.swarmTarget = 0;
   }
 
   private separateFromOthers(ant: Ant, out: Vec2) {
@@ -376,23 +301,12 @@ export class World {
         const push = (minDist - d) * 0.5;
         dx /= d;
         dy /= d;
-        a.x = clamp(a.x + dx * push, 0, this.width);
-        a.y = clamp(a.y + dy * push, 0, this.height);
-        b.x = clamp(b.x - dx * push, 0, this.width);
-        b.y = clamp(b.y - dy * push, 0, this.height);
+        a.x += dx * push;
+        a.y += dy * push;
+        b.x -= dx * push;
+        b.y -= dy * push;
       }
     }
-  }
-
-  private rerollGoal(ant: Ant) {
-    const radius =
-      ant.state === "out"
-        ? this.worldTuning.foodRadius
-        : this.worldTuning.nestRadius;
-    const angle = Math.random() * TAU;
-    const distance = Math.sqrt(Math.random()) * radius * 0.9;
-    ant.goalJitterX = Math.cos(angle) * distance;
-    ant.goalJitterY = Math.sin(angle) * distance;
   }
 
   private avoidContent(ant: Ant, out: Vec2) {
@@ -430,76 +344,13 @@ export class World {
   }
 
   private spawnAnt() {
-    const food = Math.floor(Math.random() * this.paths.length);
-    const path = this.paths[food];
-    if (!path || path.length < 2) return;
-    const state = Math.random() < 0.54 ? "out" : "back";
-    const t = Math.random();
-    const index = Math.min(path.length - 2, Math.floor(t * (path.length - 1)));
-    const a = path[index];
-    const b = path[index + 1];
-    const from = state === "out" ? a : b;
-    const to = state === "out" ? b : a;
-    const angle = Math.atan2(to.y - from.y, to.x - from.x);
-    const jitter = rand(-2, 2);
-    const x = a.x - Math.sin(angle) * jitter;
-    const y = a.y + Math.cos(angle) * jitter;
+    const margin = Math.max(this.worldTuning.edgeMargin, 1);
+    const x = rand(margin, Math.max(margin, this.width - margin));
+    const y = rand(margin, Math.max(margin, this.height - margin));
+    const heading = Math.random() * TAU;
     const speed =
-      (state === "out"
-        ? this.worldTuning.forageSpeed
-        : this.worldTuning.returnSpeed) *
-      (0.86 + Math.random() * 0.28);
+      this.worldTuning.wanderSpeed * (0.86 + Math.random() * 0.28);
 
-    const ant = createAnt(
-      this.nextId++,
-      x,
-      y,
-      angle + rand(-0.08, 0.08),
-      food,
-      state,
-      speed,
-    );
-    this.rerollGoal(ant);
-    this.ants.push(ant);
-  }
-
-  private makePath(from: Vec2, to: Vec2, index: number) {
-    const dx = to.x - from.x;
-    const dy = to.y - from.y;
-    const length = Math.hypot(dx, dy) || 1;
-    const nx = -dy / length;
-    const ny = dx / length;
-    const bend =
-      (index % 2 === 0 ? 1 : -1) *
-      Math.min(this.width, this.height) *
-      (0.075 + index * 0.012);
-    const control = {
-      x: (from.x + to.x) * 0.5 + nx * bend,
-      y: (from.y + to.y) * 0.5 + ny * bend,
-    };
-    const points: Vec2[] = [];
-    const steps = 72;
-    for (let i = 0; i <= steps; i++) {
-      const t = i / steps;
-      const it = 1 - t;
-      const wobble =
-        Math.sin(t * Math.PI * 3 + index * 1.7) *
-        Math.min(this.width, this.height) *
-        0.012 *
-        Math.sin(t * Math.PI);
-      points.push({
-        x:
-          it * it * from.x +
-          2 * it * t * control.x +
-          t * t * to.x +
-          nx * wobble,
-        y:
-          it * it * from.y +
-          2 * it * t * control.y +
-          t * t * to.y +
-          ny * wobble,
-      });
-    }
-    return points;
+    this.ants.push(createAnt(this.nextId++, x, y, heading, speed));
   }
 }

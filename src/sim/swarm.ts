@@ -1,21 +1,17 @@
 import type { TUNING } from "../config";
 import type { Ant } from "./ants";
-import type { PheromoneField } from "./pheromone";
 import type { PointerState, Vec2 } from "./types";
 
 type SwarmTuning = typeof TUNING.swarm;
 
-const GRAD = { x: 0, y: 0 };
-
 /**
  * Boids-style acceleration for a scattering ant. Separation dominates up
  * close, alignment keeps the burst moving together, cohesion rounds it into a
- * loose cloud, and the pointer/trail pulls the cloud where the user leads it.
+ * loose cloud, and the pointer pulls the cloud where the user leads it.
  */
 export function swarmAcceleration(
   ant: Ant,
   ants: readonly Ant[],
-  field: PheromoneField,
   pointer: PointerState,
   tuning: SwarmTuning,
   out: Vec2,
@@ -76,8 +72,5 @@ export function swarmAcceleration(
     }
   }
 
-  field.gradient(ant.x, ant.y, GRAD);
-  out.x += GRAD.x * tuning.fieldForce;
-  out.y += GRAD.y * tuning.fieldForce;
   return out;
 }

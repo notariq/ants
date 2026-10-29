@@ -2,7 +2,7 @@ import "./styles.css";
 import { CONTENT } from "./config";
 import { ColonyEngine } from "./engine";
 import { aboutPage } from "./pages/about";
-import { antPage } from "./pages/ant";
+import { antPage } from "./pages/projects";
 import { createRouter } from "./router";
 import {
   initTheme,
@@ -28,11 +28,14 @@ let theme: ThemeName = initTheme();
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 const MOTION_KEY = "colony-motion";
 
-function readMotionOverride() {
+function readMotionOverride(): boolean | null {
   try {
-    return localStorage.getItem(MOTION_KEY) === "on";
+    const value = localStorage.getItem(MOTION_KEY);
+    if (value === "on") return true;
+    if (value === "off") return false;
+    return null;
   } catch {
-    return false;
+    return null;
   }
 }
 
@@ -55,15 +58,15 @@ for (const item of CONTENT.nav) {
   navLinks.push(link);
 }
 
+const motionButton = document.createElement("button");
+motionButton.type = "button";
+motionButton.className = "motion-toggle";
+nav.append(motionButton);
+
 const themeButton = document.createElement("button");
 themeButton.type = "button";
 nav.append(themeButton);
 
-const motionButton = document.createElement("button");
-motionButton.type = "button";
-motionButton.className = "motion-toggle";
-motionButton.hidden = true;
-nav.append(motionButton);
 
 function paintThemeButton(name: ThemeName) {
   const next = name === "light" ? "dark" : "light";
@@ -104,11 +107,10 @@ CONTENT.socials.forEach((social, index) => {
 const canvas = must<HTMLCanvasElement>("#colony");
 const engine = new ColonyEngine(canvas, readCanvasPalette(theme));
 
-if (readMotionOverride()) engine.setMotionEnabled(true);
+const storedMotion = readMotionOverride();
+if (storedMotion !== null) engine.setMotionEnabled(storedMotion);
 
 function syncMotionButton() {
-  motionButton.hidden = !reducedMotion.matches;
-  if (motionButton.hidden) return;
   const enabled = engine.motionEnabled;
   motionButton.textContent = enabled ? "still" : "animate";
   motionButton.setAttribute("aria-pressed", String(enabled));
@@ -118,7 +120,7 @@ function syncMotionButton() {
   );
   motionButton.title = enabled
     ? "Pause the colony and keep a still frame"
-    : "Start the colony (system reduced motion is on)";
+    : "Start the colony animation";
 }
 
 syncMotionButton();

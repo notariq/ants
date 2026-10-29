@@ -15,5 +15,4 @@ export interface PointerState {
   y: number;
   active: boolean;
   down: boolean;
-  lastPaint: Vec2 | null;
 }

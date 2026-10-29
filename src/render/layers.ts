@@ -5,7 +5,7 @@ import type { Box } from "../sim/types";
 import type { World } from "../sim/world";
 import type { CanvasPalette } from "../ui/theme";
 import { CellGrid } from "./grid";
-import { AMBIENT_RAMP, PHEROMONE_RAMP } from "./glyphs";
+import { AMBIENT_RAMP } from "./glyphs";
 import {
   buildSprites,
   BODY_GLYPHS,
@@ -14,6 +14,8 @@ import {
 } from "./sprites";
 
 const DIM_FLOOR = 0.16;
+const MOBILE_BREAKPOINT = 900;
+const MOBILE_CELL_REDUCTION = 4;
 
 interface TrailGhost {
   x: number;
@@ -34,8 +36,6 @@ export class ColonyRenderer {
   private sprites: SpriteSet | null = null;
   private spriteKey = "";
   private readonly trails = new Map<number, TrailGhost[]>();
-  private readonly pheromoneBuckets: number[][] = [[], [], [], [], []];
-  private readonly paintCells: number[] = [];
 
   constructor(canvas: HTMLCanvasElement, palette: CanvasPalette) {
     this.grid = new CellGrid(canvas);
@@ -59,6 +59,12 @@ export class ColonyRenderer {
     this.setAvoidBoxes(this.boxes);
   }
 
+  private antCellPx() {
+    return this.grid.width <= MOBILE_BREAKPOINT
+      ? Math.max(4, TUNING.ant.cellPx - MOBILE_CELL_REDUCTION)
+      : TUNING.ant.cellPx;
+  }
+
   private rebuildSprites() {
     if (this.grid.width < 1 || this.grid.height < 1) {
       this.sprites = null;
@@ -66,8 +72,9 @@ export class ColonyRenderer {
       return;
     }
     const { antAbdomen, antBody, antLeg, antAntenna, antGlyph } = this.palette;
+    const cellPx = this.antCellPx();
     const key = [
-      TUNING.ant.cellPx,
+      cellPx,
       TUNING.ant.tileGap,
       TUNING.ant.headings,
       this.grid.dpr,
@@ -81,7 +88,7 @@ export class ColonyRenderer {
     if (this.sprites && key === this.spriteKey) return;
     this.spriteKey = key;
     this.sprites = buildSprites({
-      cellPx: TUNING.ant.cellPx,
+      cellPx,
       tileGap: TUNING.ant.tileGap,
       dpr: this.grid.dpr,
       headings: TUNING.ant.headings,
@@ -135,7 +142,6 @@ export class ColonyRenderer {
     ctx.textBaseline = "middle";
 
     this.drawAmbient();
-    this.drawPheromone(world);
     this.drawAnts(world);
     ctx.globalAlpha = 1;
   }
@@ -177,61 +183,6 @@ export class ColonyRenderer {
     ctx.globalAlpha = 1;
   }
 
-  private drawPheromone(world: World) {
-    const { ctx, cols, cellW, cellH } = this.grid;
-    const trail = world.field.trail;
-    const paint = world.field.paint;
-    if (trail.length !== this.dim.length) return;
-
-    for (const bucket of this.pheromoneBuckets) bucket.length = 0;
-    this.paintCells.length = 0;
-    for (let i = 0; i < trail.length; i++) {
-      const painted = paint[i];
-      if (painted > 0.02) this.paintCells.push(i);
-      const value = trail[i] + painted * TUNING.pheromone.paintWeight;
-      if (value < 0.02) continue;
-      const shown = Math.min(1, value * 0.78) * this.dim[i];
-      if (shown < 0.04) continue;
-      const level = Math.min(4, Math.floor(shown * 5));
-      this.pheromoneBuckets[level].push(i);
-    }
-
-    ctx.fillStyle = this.palette.pheromone;
-    for (let level = 0; level < this.pheromoneBuckets.length; level++) {
-      const bucket = this.pheromoneBuckets[level];
-      if (bucket.length === 0) continue;
-      ctx.globalAlpha = this.palette.pheromoneAlpha[level];
-      const glyph = PHEROMONE_RAMP[level];
-      for (const i of bucket) {
-        const c = i % cols;
-        const r = (i / cols) | 0;
-        ctx.fillText(
-          glyph,
-          c * cellW + cellW * 0.5,
-          r * cellH + cellH * 0.5 + 1,
-        );
-      }
-    }
-
-    if (this.paintCells.length > 0) {
-      ctx.fillStyle = this.palette.ant;
-      for (const i of this.paintCells) {
-        const dim = this.dim[i];
-        if (dim < 0.06) continue;
-        const c = i % cols;
-        const r = (i / cols) | 0;
-        ctx.globalAlpha =
-          Math.min(0.82, 0.24 + paint[i] * 0.1) * dim;
-        ctx.fillText(
-          (c * 7 + r * 13) % 7 === 0 ? "@" : "#",
-          c * cellW + cellW * 0.5,
-          r * cellH + cellH * 0.5 + 1,
-        );
-      }
-    }
-    ctx.globalAlpha = 1;
-  }
-
   private drawAnts(world: World) {
     const sprites = this.sprites;
     if (!sprites) return;
@@ -260,7 +211,7 @@ export class ColonyRenderer {
         sprites.sizePx,
       );
       if (TUNING.ant.glyphFlicker > 0 && cellPx >= 7) {
-        this.drawFlicker(ant, variant, dx, dy, alpha, world.time);
+        this.drawFlicker(ant, variant, dx, dy, alpha, world.time, cellPx);
       }
     }
 
@@ -288,6 +239,7 @@ export class ColonyRenderer {
     dy: number,
     alpha: number,
     time: number,
+    cellPx: number,
   ) {
     if (variant.bodyTiles.length === 0) return;
     const tick = Math.floor(time * 7 + ant.id * 0.31);
@@ -309,7 +261,6 @@ export class ColonyRenderer {
         ? BODY_GLYPHS[(glyphIndex + 1) % BODY_GLYPHS.length]
         : BODY_GLYPHS[glyphIndex];
 
-    const cellPx = TUNING.ant.cellPx;
     const gap = Math.max(0, Math.min(TUNING.ant.tileGap, cellPx - 1));
     const fillSize = Math.max(1, cellPx - gap);
     const x = dx + tile.x * cellPx;
