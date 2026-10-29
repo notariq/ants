@@ -26,7 +26,7 @@ export const aboutPage: Page = {
 
     const heading = document.createElement("h1");
     heading.className = "about-title";
-    heading.textContent = "about";
+    heading.textContent = "Hauzan Ariq Bakri";
 
     const intro = document.createElement("p");
     intro.textContent =
@@ -34,7 +34,7 @@ export const aboutPage: Page = {
 
     const body = document.createElement("p");
     body.textContent =
-      "A second paragraph can hold a little more context: your background, the tools you reach for, or the kind of work you want to do next.";
+      "hauzanbakri@gmail.com";
 
     copy.append(heading, intro, body);
     grid.append(media, copy);

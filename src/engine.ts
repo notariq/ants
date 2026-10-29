@@ -32,7 +32,7 @@ export class ColonyEngine {
   private visible = true;
   private disposed = false;
   private dragPointer: number | null = null;
-  private motionOverride = false;
+  private motionOverride: boolean | null = null;
   private suspended = false;
 
   constructor(
@@ -145,7 +145,9 @@ export class ColonyEngine {
   }
 
   private isStatic() {
-    return this.reducedMotion.matches && !this.motionOverride;
+    return this.motionOverride === null
+      ? this.reducedMotion.matches
+      : !this.motionOverride;
   }
 
   private syncMotion() {

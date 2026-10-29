@@ -14,6 +14,8 @@ import {
 } from "./sprites";
 
 const DIM_FLOOR = 0.16;
+const MOBILE_BREAKPOINT = 900;
+const MOBILE_CELL_REDUCTION = 4;
 
 interface TrailGhost {
   x: number;
@@ -57,6 +59,12 @@ export class ColonyRenderer {
     this.setAvoidBoxes(this.boxes);
   }
 
+  private antCellPx() {
+    return this.grid.width <= MOBILE_BREAKPOINT
+      ? Math.max(4, TUNING.ant.cellPx - MOBILE_CELL_REDUCTION)
+      : TUNING.ant.cellPx;
+  }
+
   private rebuildSprites() {
     if (this.grid.width < 1 || this.grid.height < 1) {
       this.sprites = null;
@@ -64,8 +72,9 @@ export class ColonyRenderer {
       return;
     }
     const { antAbdomen, antBody, antLeg, antAntenna, antGlyph } = this.palette;
+    const cellPx = this.antCellPx();
     const key = [
-      TUNING.ant.cellPx,
+      cellPx,
       TUNING.ant.tileGap,
       TUNING.ant.headings,
       this.grid.dpr,
@@ -79,7 +88,7 @@ export class ColonyRenderer {
     if (this.sprites && key === this.spriteKey) return;
     this.spriteKey = key;
     this.sprites = buildSprites({
-      cellPx: TUNING.ant.cellPx,
+      cellPx,
       tileGap: TUNING.ant.tileGap,
       dpr: this.grid.dpr,
       headings: TUNING.ant.headings,
@@ -202,7 +211,7 @@ export class ColonyRenderer {
         sprites.sizePx,
       );
       if (TUNING.ant.glyphFlicker > 0 && cellPx >= 7) {
-        this.drawFlicker(ant, variant, dx, dy, alpha, world.time);
+        this.drawFlicker(ant, variant, dx, dy, alpha, world.time, cellPx);
       }
     }
 
@@ -230,6 +239,7 @@ export class ColonyRenderer {
     dy: number,
     alpha: number,
     time: number,
+    cellPx: number,
   ) {
     if (variant.bodyTiles.length === 0) return;
     const tick = Math.floor(time * 7 + ant.id * 0.31);
@@ -251,7 +261,6 @@ export class ColonyRenderer {
         ? BODY_GLYPHS[(glyphIndex + 1) % BODY_GLYPHS.length]
         : BODY_GLYPHS[glyphIndex];
 
-    const cellPx = TUNING.ant.cellPx;
     const gap = Math.max(0, Math.min(TUNING.ant.tileGap, cellPx - 1));
     const fillSize = Math.max(1, cellPx - gap);
     const x = dx + tile.x * cellPx;

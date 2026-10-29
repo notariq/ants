@@ -126,10 +126,6 @@ body {
   display: none;
 }
 
-.site-nav .motion-toggle:not([hidden]) {
-  opacity: 0.78;
-}
-
 .hero {
   position: absolute;
   left: 6vw;
@@ -298,10 +294,6 @@ body {
     gap: 1.35rem;
     padding-top: 1.75rem;
     font-size: 12px;
-  }
-
-  .site-nav .motion-toggle:not([hidden]) {
-    opacity: 0.9;
   }
 
   .hero {

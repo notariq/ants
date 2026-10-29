@@ -1,8 +1,8 @@
 import type { Page } from "../router";
 
 export const antPage: Page = {
-  path: "/ant",
-  title: "ant",
+  path: "/projects",
+  title: "projects",
   mount(root) {
     const section = document.createElement("section");
     section.className = "page";

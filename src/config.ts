@@ -25,8 +25,8 @@ export const CONTENT = {
     { label: "linkedin", href: "#" },
   ] satisfies SocialLink[],
   nav: [
-    { label: "home", href: "#/" },
-    { label: "ants", href: "#/ant" },
+    { label: "ants", href: "#/" },
+    { label: "projects", href: "#/projects" },
     { label: "about", href: "#/about" },
   ] satisfies NavItem[],
 };
@@ -43,9 +43,9 @@ export const TUNING = {
   },
   ant: {
     count: 12,
-    minCount: 0,
-    maxCount: 32,
-    cellPx: 8,
+    minCount: 6,
+    maxCount: 24,
+    cellPx: 12,
     tileGap: 1,
     headings: 8,
     glyphFlicker: 0.02,
@@ -62,6 +62,8 @@ export const TUNING = {
   world: {
     wanderSpeed: 26,
     edgeMargin: 22,
+    exitMargin: 130,
+    entryInset: 24,
     avoidMargin: 30,
     avoidForce: 380,
     hoverRadius: 38,

@@ -172,14 +172,19 @@ export class World {
     ax += this.separation.x;
     ay += this.separation.y;
 
-    const margin = this.worldTuning.edgeMargin;
-    if (ant.x < margin) ax += ((margin - ant.x) / margin) * EDGE_FORCE;
-    else if (ant.x > this.width - margin) {
-      ax -= ((ant.x - (this.width - margin)) / margin) * EDGE_FORCE;
-    }
-    if (ant.y < margin) ay += ((margin - ant.y) / margin) * EDGE_FORCE;
-    else if (ant.y > this.height - margin) {
-      ay -= ((ant.y - (this.height - margin)) / margin) * EDGE_FORCE;
+    if (ant.swarm > 0.05) {
+      const margin = this.worldTuning.edgeMargin;
+      const edgeScale = ant.swarm;
+      if (ant.x < margin) {
+        ax += ((margin - ant.x) / margin) * EDGE_FORCE * edgeScale;
+      } else if (ant.x > this.width - margin) {
+        ax -= ((ant.x - (this.width - margin)) / margin) * EDGE_FORCE * edgeScale;
+      }
+      if (ant.y < margin) {
+        ay += ((margin - ant.y) / margin) * EDGE_FORCE * edgeScale;
+      } else if (ant.y > this.height - margin) {
+        ay -= ((ant.y - (this.height - margin)) / margin) * EDGE_FORCE * edgeScale;
+      }
     }
 
     ant.vx += ax * dt;
@@ -197,9 +202,67 @@ export class World {
 
     ant.x += ant.vx * dt;
     ant.y += ant.vy * dt;
-    ant.x = clamp(ant.x, 0, this.width);
-    ant.y = clamp(ant.y, 0, this.height);
+
+    const exit = this.worldTuning.exitMargin;
+    if (
+      ant.x < -exit ||
+      ant.x > this.width + exit ||
+      ant.y < -exit ||
+      ant.y > this.height + exit
+    ) {
+      this.reenterAnt(ant);
+    }
+
     orientAnt(ant, dt);
+  }
+
+  /**
+   * Send an ant that wandered off-screen back in from a random edge so the
+   * colony keeps flowing through the view instead of piling up at the border.
+   */
+  private reenterAnt(ant: Ant) {
+    const inset = this.worldTuning.entryInset;
+    const edge = Math.floor(Math.random() * 4);
+    let x = 0;
+    let y = 0;
+    let heading = 0;
+
+    switch (edge) {
+      case 0:
+        x = rand(0, this.width);
+        y = -inset;
+        heading = Math.PI / 2;
+        break;
+      case 1:
+        x = this.width + inset;
+        y = rand(0, this.height);
+        heading = Math.PI;
+        break;
+      case 2:
+        x = rand(0, this.width);
+        y = this.height + inset;
+        heading = -Math.PI / 2;
+        break;
+      default:
+        x = -inset;
+        y = rand(0, this.height);
+        heading = 0;
+        break;
+    }
+
+    heading += rand(-0.4, 0.4);
+    const speed = this.worldTuning.wanderSpeed * ant.speedScale;
+    ant.x = x;
+    ant.y = y;
+    ant.vx = Math.cos(heading) * speed;
+    ant.vy = Math.sin(heading) * speed;
+    ant.heading = heading;
+    ant.wanderAngle = heading;
+    ant.wanderTimer =
+      this.time + rand(this.antTuning.wanderMin, this.antTuning.wanderMax);
+    ant.pause = 0;
+    ant.swarm = 0;
+    ant.swarmTarget = 0;
   }
 
   private separateFromOthers(ant: Ant, out: Vec2) {
@@ -238,10 +301,10 @@ export class World {
         const push = (minDist - d) * 0.5;
         dx /= d;
         dy /= d;
-        a.x = clamp(a.x + dx * push, 0, this.width);
-        a.y = clamp(a.y + dy * push, 0, this.height);
-        b.x = clamp(b.x - dx * push, 0, this.width);
-        b.y = clamp(b.y - dy * push, 0, this.height);
+        a.x += dx * push;
+        a.y += dy * push;
+        b.x -= dx * push;
+        b.y -= dy * push;
       }
     }
   }
