@@ -8,13 +8,12 @@
   --hairline: rgb(24 24 23 / 0.16);
   --caret: #181817;
   --selection: rgb(24 24 23 / 0.12);
-  --canvas-ant: #121211;
-  --canvas-ambient: #8b887f;
-  --canvas-ant-abdomen: #232320;
-  --canvas-ant-body: #34342f;
-  --canvas-ant-leg: #7a776d;
-  --canvas-ant-antenna: #9d998f;
-  --canvas-ant-glyph: #e9e7df;
+  --canvas-bg: #f4f2ed;
+  --canvas-chitin: #6b625b;
+  --canvas-leg: #8a847b;
+  --canvas-mouth: #181614;
+  --canvas-soil: #96938a;
+  --canvas-shadow: #3c3a36;
   --mono: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas,
     "Liberation Mono", monospace;
 }
@@ -27,13 +26,12 @@
   --hairline: rgb(236 235 229 / 0.18);
   --caret: #ecebe5;
   --selection: rgb(236 235 229 / 0.16);
-  --canvas-ant: #f0eee7;
-  --canvas-ambient: #66645e;
-  --canvas-ant-abdomen: #f2f0e8;
-  --canvas-ant-body: #d8d5cc;
-  --canvas-ant-leg: #a8a49b;
-  --canvas-ant-antenna: #827e75;
-  --canvas-ant-glyph: #141412;
+  --canvas-bg: #111110;
+  --canvas-chitin: #d9d4c9;
+  --canvas-leg: #aaa59b;
+  --canvas-mouth: #141412;
+  --canvas-soil: #9a978f;
+  --canvas-shadow: #000000;
 }
 
 html,
@@ -149,10 +147,6 @@ body {
   display: none;
 }
 
-.page-root.is-canvas-route {
-  pointer-events: none;
-}
-
 .page-view {
   min-height: 100dvh;
 }
@@ -262,7 +256,6 @@ body {
   letter-spacing: -0.025em;
 }
 
-.ink-link,
 .socials a {
   color: inherit;
   text-decoration-line: underline;
@@ -273,14 +266,11 @@ body {
   transition: text-decoration-color 150ms ease;
 }
 
-.ink-link:hover,
-.ink-link:focus-visible,
 .socials a:hover,
 .socials a:focus-visible {
   text-decoration-color: currentColor;
 }
 
-.ink-link:focus-visible,
 .socials a:focus-visible,
 .site-nav a:focus-visible,
 .site-nav button:focus-visible {
@@ -312,16 +302,6 @@ body {
     left: 50%;
     width: 88vw;
     transform: translateX(-50%);
-  }
-
-  .readout {
-    right: 6vw;
-    top: 4.8rem;
-  }
-
-  .bio {
-    max-width: 34rem;
-    font-size: 14px;
   }
 
   .intro {
@@ -363,12 +343,6 @@ body {
   .intro {
     margin-top: 0.85rem;
     font-size: 1.1rem;
-  }
-
-  .bio {
-    margin-top: 0.7rem;
-    font-size: 13.5px;
-    line-height: 1.62;
   }
 
   .socials {

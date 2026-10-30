@@ -167,10 +167,8 @@ const router = createRouter({
   outlet: pageRoot,
   onChange(path) {
     const home = path === "/";
-    const colony = home || path === "/ant";
-    canvas.hidden = !colony;
-    engine.setActive(colony);
-    pageRoot.classList.toggle("is-canvas-route", path === "/ant");
+    canvas.hidden = !home;
+    engine.setActive(home);
     syncNav(path);
     if (home) startTypewriter();
   },

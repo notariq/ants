@@ -1,8 +1,3 @@
-export interface InlineLink {
-  label: string;
-  href: string;
-}
-
 export interface SocialLink {
   label: string;
   href: string;
@@ -33,51 +28,45 @@ export const CONTENT = {
 
 export const TUNING = {
   render: {
-    targetColumns: 124,
+    targetColumns: 160,
     minCell: 8,
-    maxCell: 13,
+    maxCell: 11,
     cellAspect: 1.45,
     maxDpr: 2,
-    ambientDensity: 0.037,
-    fontScale: 0.74,
+    ambientDensity: 0.03,
+    ambientAlpha: 0.08,
+    fontScale: 0.78,
   },
   ant: {
-    count: 1,
-    minCount: 1,
-    maxCount: 1,
-    cellPx: 10,
-    mobileCellPx: 8,
-    mobileBreakpoint: 900,
-    tileGap: 1,
-    headings: 16,
-    walkFrames: 6,
-    idleSpeed: 4,
-    glyphFlicker: 0.015,
-    trailsEnabled: true,
-    trailLife: 0.4,
-    strideLength: 4,
-    separationRadius: 130,
-    separationForce: 260,
-    collisionDistance: 58,
-    wanderTurn: 1.35,
+    count: 6,
+    minCount: 4,
+    maxCount: 6,
+    lengthSideFraction: 0.3,
+    lengthMin: 140,
+    lengthMax: 340,
+    separationFraction: 0.95,
+    collisionFraction: 0.72,
+    strideFraction: 0.28,
+    duty: 0.55,
+    wanderTurn: 1.1,
     wanderMin: 2.4,
     wanderMax: 6,
   },
   world: {
-    wanderSpeed: 26,
-    edgeMargin: 22,
-    exitMargin: 130,
-    entryInset: 24,
-    avoidMargin: 30,
-    avoidForce: 380,
-    hoverRadius: 38,
-    hoverForce: 110,
+    wanderSpeed: 44,
+    edgeMargin: 30,
+    exitMargin: 180,
+    entryInset: 32,
+    avoidMargin: 40,
+    avoidForce: 360,
+    hoverRadius: 64,
+    hoverForce: 80,
     step: 1 / 60,
     maxSteps: 4,
   },
   pointer: {
-    scatterRadius: 215,
-    burstSpeed: 255,
+    scatterRadius: 300,
+    burstSpeed: 240,
   },
   swarm: {
     blendSeconds: 0.65,

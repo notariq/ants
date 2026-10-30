@@ -16,6 +16,7 @@ export class CellGrid {
   rows = 0;
   fontFamily = FALLBACK_FONT;
 
+  // Bind the 2D context and read the canvas font family.
   constructor(readonly canvas: HTMLCanvasElement) {
     const ctx = canvas.getContext("2d", { alpha: true });
     if (!ctx) throw new Error("2D canvas unavailable");
@@ -24,6 +25,7 @@ export class CellGrid {
     if (family) this.fontFamily = family;
   }
 
+  // Size the backing canvas and recompute the cell geometry.
   resize(width: number, height: number, dpr: number) {
     if (width < 1 || height < 1) return;
     this.width = width;
@@ -45,10 +47,12 @@ export class CellGrid {
     this.ctx.textBaseline = "middle";
   }
 
+  // Total number of cells in the grid.
   get cellCount() {
     return this.cols * this.rows;
   }
 
+  // Flat cell index at a world position, or -1 when outside.
   indexAt(x: number, y: number) {
     const c = Math.floor(x / this.cellW);
     const r = Math.floor(y / this.cellH);
@@ -56,14 +60,7 @@ export class CellGrid {
     return r * this.cols + c;
   }
 
-  centerX(index: number) {
-    return (index % this.cols) * this.cellW + this.cellW * 0.5;
-  }
-
-  centerY(index: number) {
-    return Math.floor(index / this.cols) * this.cellH + this.cellH * 0.5;
-  }
-
+  // Clear the visible canvas.
   clear() {
     this.ctx.clearRect(0, 0, this.width, this.height);
   }

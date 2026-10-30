@@ -30,13 +30,13 @@ export const aboutPage: Page = {
 
     const intro = document.createElement("p");
     intro.textContent =
-      "Placeholder text for the about page. Replace this paragraph with a short introduction — who you are, what you build, and what you are currently exploring.";
+      "Saravá! Informatics graduate — with interest in Systems Engineering and ML Infrastructures. Currently working/studying/building between projects and freelancing. Open to new opportunities and collaborations!";
 
-    const body = document.createElement("p");
-    body.textContent =
+    const email = document.createElement("p");
+    email.textContent =
       "hauzanbakri@gmail.com";
 
-    copy.append(heading, intro, body);
+    copy.append(heading, intro, email);
     grid.append(media, copy);
     section.append(grid);
     root.append(section);
