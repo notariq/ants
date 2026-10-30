@@ -1,17 +1,20 @@
 import type { Page } from "../router";
+import { Typewriter } from "../ui/typewriter";
 
 export const antPage: Page = {
   path: "/projects",
   title: "projects",
   mount(root) {
     const section = document.createElement("section");
-    section.className = "page";
+    section.className = "page projects";
 
-    const heading = document.createElement("h1");
-    heading.className = "sr-only";
-    heading.textContent = "ant";
+    const intro = document.createElement('p');
+    intro.className = "projects-title"
 
-    section.append(heading);
+    const typewriter = new Typewriter(intro);
+    typewriter.play(["compiling..."])
+
+    section.append(intro);
     root.append(section);
   },
 };

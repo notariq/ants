@@ -4,13 +4,6 @@ import { clamp } from "./sim/math";
 import { World } from "./sim/world";
 import type { CanvasPalette } from "./ui/theme";
 
-export interface SimStats {
-  ants: number;
-  fps: number;
-  x: number;
-  y: number;
-}
-
 const MEASURE_EVERY_FRAMES = 30;
 
 export class ColonyEngine {
@@ -27,7 +20,6 @@ export class ColonyEngine {
   private acc = 0;
   private frames = 0;
 
-  private fps = 60;
   private intersecting = true;
   private visible = true;
   private disposed = false;
@@ -187,13 +179,10 @@ export class ColonyEngine {
 
     if (++this.frames % MEASURE_EVERY_FRAMES === 0) this.measureContent();
 
-    if (dt > 0) this.fps += (1 / dt - this.fps) * 0.06;
-
     this.raf = requestAnimationFrame(this.frame);
   };
 
   private drawStill() {
-    this.fps = 0;
     if (this.world.time < 0.001) {
       for (let i = 0; i < 240; i++) this.world.step(TUNING.world.step);
     }

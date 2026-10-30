@@ -1,5 +1,12 @@
 import { TUNING } from "../config";
-import { createAnt, orientAnt, wanderDirection, type Ant } from "./ants";
+import {
+  createAnt,
+  orientAnt,
+  resetLegs,
+  updateGait,
+  wanderDirection,
+  type Ant,
+} from "./ants";
 import { clamp, rand, TAU } from "./math";
 import { swarmAcceleration } from "./swarm";
 import type { Box, PointerState, Vec2 } from "./types";
@@ -11,6 +18,7 @@ type AntTuning = typeof TUNING.ant;
 
 const EDGE_FORCE = 280;
 
+/** Owns the ant population and advances its steering simulation. */
 export class World {
   width = 0;
   height = 0;
@@ -32,6 +40,7 @@ export class World {
   private readonly separation: Vec2 = { x: 0, y: 0 };
   private swarmActive = false;
 
+  // Accept tuning overrides so a world can be simulated in isolation.
   constructor(
     private readonly worldTuning: WorldTuning = TUNING.world,
     private readonly pointerTuning: PointerTuning = TUNING.pointer,
@@ -39,19 +48,14 @@ export class World {
     private readonly antTuning: AntTuning = TUNING.ant,
   ) {}
 
-  get antCount() {
-    return this.ants.length;
-  }
-
+  // Resize the world and keep the ant population near the viewport target.
   resize(width: number, height: number) {
     if (width < 1 || height < 1) return;
     this.width = width;
     this.height = height;
 
     const target = clamp(
-      Math.round(
-        this.antTuning.count * ((width * height) / (1440 * 900)),
-      ),
+      this.antTuning.count,
       this.antTuning.minCount,
       this.antTuning.maxCount,
     );
@@ -64,14 +68,18 @@ export class World {
       for (const ant of this.ants) {
         ant.x = clamp(ant.x, 0, width);
         ant.y = clamp(ant.y, 0, height);
+        ant.length = this.antLength();
+        resetLegs(ant);
       }
     }
   }
 
+  // Store the boxes that ants should keep away from.
   setAvoidBoxes(boxes: Box[]) {
     this.boxes = boxes;
   }
 
+  /** Advance the simulation by one fixed timestep. */
   step(dt: number) {
     this.time += dt;
     this.swarmActive = this.ants.some(
@@ -80,14 +88,17 @@ export class World {
 
     for (const ant of this.ants) this.stepAnt(ant, dt);
     this.resolveCollisions();
+    for (const ant of this.ants) updateGait(ant, dt);
   }
 
+  // Update the pointer position and hover state without pressing.
   setPointer(x: number, y: number, active: boolean) {
     this.pointer.x = x;
     this.pointer.y = y;
     this.pointer.active = active;
   }
 
+  // Start a pointer press and scatter nearby ants.
   pointerDown(x: number, y: number) {
     this.pointer.x = x;
     this.pointer.y = y;
@@ -96,11 +107,13 @@ export class World {
     this.scatter(x, y);
   }
 
+  // Release the pointer and stop ants from swarming toward it.
   pointerUp() {
     this.pointer.down = false;
     for (const ant of this.ants) ant.swarmTarget = 0;
   }
 
+  // Push ants outward from the pointer with a random burst.
   private scatter(x: number, y: number) {
     const radius = this.pointerTuning.scatterRadius;
     const r2 = radius * radius;
@@ -120,8 +133,8 @@ export class World {
     }
   }
 
+  // Integrate one ant's steering, speed limit, edges, and heading.
   private stepAnt(ant: Ant, dt: number) {
-    ant.age += dt;
     ant.swarm +=
       (ant.swarmTarget - ant.swarm) * Math.min(1, dt * 2.4);
     if (ant.swarm < 0.001) ant.swarm = 0;
@@ -263,13 +276,15 @@ export class World {
     ant.pause = 0;
     ant.swarm = 0;
     ant.swarmTarget = 0;
+    resetLegs(ant);
   }
 
+  // Accumulate a repulsion force away from nearby ants.
   private separateFromOthers(ant: Ant, out: Vec2) {
     out.x = 0;
     out.y = 0;
-    const radius = this.antTuning.separationRadius;
-    const force = this.antTuning.separationForce;
+    const radius = ant.length * this.antTuning.separationFraction;
+    const force = 320;
     const r2 = radius * radius;
 
     for (const other of this.ants) {
@@ -285,14 +300,15 @@ export class World {
     }
   }
 
+  // Push overlapping ants apart.
   private resolveCollisions() {
-    const minDist = this.antTuning.collisionDistance;
-    const min2 = minDist * minDist;
-
     for (let i = 0; i < this.ants.length; i++) {
       const a = this.ants[i];
       for (let j = i + 1; j < this.ants.length; j++) {
         const b = this.ants[j];
+        const minDist =
+          ((a.length + b.length) * 0.5) * this.antTuning.collisionFraction;
+        const min2 = minDist * minDist;
         let dx = a.x - b.x;
         let dy = a.y - b.y;
         const d2 = dx * dx + dy * dy;
@@ -309,6 +325,7 @@ export class World {
     }
   }
 
+  // Accumulate a repulsion force away from avoided boxes.
   private avoidContent(ant: Ant, out: Vec2) {
     out.x = 0;
     out.y = 0;
@@ -343,6 +360,16 @@ export class World {
     }
   }
 
+  // Body length scaled to the viewport, so ants stay large on every screen.
+  private antLength() {
+    return clamp(
+      Math.min(this.width * 0.5, this.height * 0.3),
+      this.antTuning.lengthMin,
+      this.antTuning.lengthMax,
+    );
+  }
+
+  // Place a new ant at a random point away from the edges.
   private spawnAnt() {
     const margin = Math.max(this.worldTuning.edgeMargin, 1);
     const x = rand(margin, Math.max(margin, this.width - margin));
@@ -350,7 +377,8 @@ export class World {
     const heading = Math.random() * TAU;
     const speed =
       this.worldTuning.wanderSpeed * (0.86 + Math.random() * 0.28);
-
-    this.ants.push(createAnt(this.nextId++, x, y, heading, speed));
+    this.ants.push(
+      createAnt(this.nextId++, x, y, heading, speed, this.antLength()),
+    );
   }
 }
